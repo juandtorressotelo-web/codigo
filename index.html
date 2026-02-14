@@ -1,0 +1,2726 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para Sharon 🖤</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Great+Vibes&family=Playfair+Display:ital@0;1&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background-color: #020002 !important;
+            overflow: hidden;
+            font-family: 'Cinzel Decorative', serif;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ============================================ */
+        /* --- ROOM OVERLAY / AMBIENT LIGHTING ---      */
+        /* ============================================ */
+        #room-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 20%, rgba(20, 0, 0, 0.98) 0%, #000 100%);
+            z-index: 10;
+            transition: opacity 2s ease, background 2s ease;
+            pointer-events: none;
+        }
+
+        body.lights-on #room-overlay {
+            background: radial-gradient(circle at 50% 8%,
+                    rgba(255, 220, 100, 0.15) 0%,
+                    rgba(255, 180, 60, 0.05) 15%,
+                    transparent 35%,
+                    rgba(30, 0, 5, 0.85) 70%,
+                    #000 100%);
+        }
+
+        /* Ocultar todo de Fase 1 al entrar en fases posteriores */
+        body.phase-2 #room-overlay,
+        body.phase-2 .lamp-container,
+        body.phase-2 .scene-container,
+        body.phase-2 .hint,
+        body.phase-slots #room-overlay,
+        body.phase-slots .lamp-container,
+        body.phase-slots .scene-container,
+        body.phase-slots .hint,
+        body.phase-3 #room-overlay,
+        body.phase-3 .lamp-container,
+        body.phase-3 .scene-container,
+        body.phase-3 .hint {
+            opacity: 0 !important;
+            transition: opacity 1s ease;
+            pointer-events: none;
+        }
+
+        /* Ocultar Fase 2 en Fase 3 */
+        body.phase-3 #roseCanvas,
+        body.phase-3 .photo-container,
+        body.phase-3 .phase2-text,
+        body.phase-3 .btn-final,
+        body.phase-3 .petal-container {
+            opacity: 0 !important;
+            transition: opacity 1.5s ease;
+            pointer-events: none;
+        }
+
+        /* ============================================ */
+        /* --- FASE 1: LÁMPARA ---                      */
+        /* ============================================ */
+        .lamp-container {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: opacity 1s;
+        }
+
+        .wire {
+            width: 4px;
+            height: 80px;
+            background: linear-gradient(to bottom, #1a1a1a, #333);
+            border-radius: 2px;
+        }
+
+        .bulb-socket {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(to bottom, #444, #222);
+            border-radius: 5px;
+            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.05);
+        }
+
+        .bulb {
+            width: 65px;
+            height: 65px;
+            background: radial-gradient(circle at 40% 35%, #555, #333);
+            border-radius: 50%;
+            margin-top: -12px;
+            transition: all 0.3s;
+            position: relative;
+            z-index: 2;
+            box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .bulb.on {
+            background: radial-gradient(circle at 40% 35%, #fffef0, #fffacd) !important;
+            box-shadow:
+                0 0 60px rgba(255, 250, 205, 1),
+                0 0 150px rgba(255, 220, 100, 0.8),
+                0 0 300px rgba(255, 200, 50, 0.3),
+                inset 0 0 20px rgba(255, 255, 255, 0.5) !important;
+        }
+
+        .pull-string-area {
+            width: 50px;
+            height: 160px;
+            /* Área de clic ampliada */
+            display: flex;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            z-index: 25;
+        }
+
+        .pull-string {
+            width: 2px;
+            height: 130px;
+            background: linear-gradient(to bottom, #555, #777);
+            position: relative;
+            transform-origin: top;
+            pointer-events: none;
+        }
+
+        .pull-knob {
+            width: 16px;
+            height: 28px;
+            background: radial-gradient(circle at 40% 30%, #cc0000, #8b0000, #500000);
+            border-radius: 50% 50% 12% 12%;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.15);
+        }
+
+        .pull-anim {
+            animation: pull 0.4s ease-in-out;
+        }
+
+        @keyframes pull {
+            0% {
+                transform: scaleY(1);
+            }
+
+            50% {
+                transform: scaleY(1.35);
+            }
+
+            100% {
+                transform: scaleY(1);
+            }
+        }
+
+        .hint {
+            position: absolute;
+            top: 260px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(120, 120, 120, 0.8);
+            font-size: 0.85rem;
+            z-index: 20;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            animation: hintPulse 2s ease-in-out infinite;
+            letter-spacing: 1px;
+        }
+
+        .hint.hidden {
+            opacity: 0 !important;
+            animation: none !important;
+        }
+
+        @keyframes hintPulse {
+
+            0%,
+            100% {
+                opacity: 0.4;
+            }
+
+            50% {
+                opacity: 0.9;
+            }
+        }
+
+        /* ============================================ */
+        /* --- FASE 1: ESCENA PASTEL/MESA ---           */
+        /* ============================================ */
+        .scene-container {
+            position: absolute;
+            bottom: 18%;
+            /* Subido de 12% para mejor visibilidad */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            filter: brightness(0.03) sepia(1) hue-rotate(320deg);
+            transition: filter 3s ease-in-out, opacity 1.5s;
+        }
+
+        body.lights-on .scene-container {
+            filter: brightness(1) sepia(0) hue-rotate(0deg);
+        }
+
+        .table {
+            width: 260px;
+            height: 16px;
+            background: linear-gradient(to right, #0d0505, #3d1e1e, #2a1010, #3d1e1e, #0d0505);
+            border-radius: 3px;
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.9), inset 0 1px 1px rgba(255, 255, 255, 0.03);
+            position: relative;
+        }
+
+        .table-leg {
+            position: absolute;
+            top: 16px;
+            width: 10px;
+            height: 160px;
+            background: linear-gradient(to right, #0d0505, #1a0a0a, #0d0505);
+            border-radius: 0 0 3px 3px;
+        }
+
+        .leg-left {
+            left: 30px;
+            transform: rotate(5deg);
+        }
+
+        .leg-right {
+            right: 30px;
+            transform: rotate(-5deg);
+        }
+
+        .cake-pedestal {
+            width: 85px;
+            height: 12px;
+            background: linear-gradient(to bottom, #333, #1a1a1a);
+            margin-bottom: -6px;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+        }
+
+        .cake-heart {
+            position: relative;
+            width: 85px;
+            height: 75px;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.6));
+            animation: none;
+        }
+
+        .cake-heart:before,
+        .cake-heart:after {
+            position: absolute;
+            content: "";
+            left: 42px;
+            top: 0;
+            width: 42px;
+            height: 68px;
+            background: linear-gradient(to bottom right, #c40000, #8b0000, #500000);
+            border-radius: 42px 42px 0 0;
+            transform: rotate(-45deg);
+            transform-origin: 0 100%;
+        }
+
+        .cake-heart:after {
+            left: 0;
+            transform: rotate(45deg);
+            transform-origin: 100% 100%;
+            background: linear-gradient(to bottom left, #c40000, #8b0000, #500000);
+        }
+
+        body.lights-on .cake-heart {
+            filter: drop-shadow(0 0 25px rgba(255, 0, 0, 0.7)) drop-shadow(0 0 50px rgba(139, 0, 0, 0.5)) drop-shadow(0 0 80px rgba(255, 215, 0, 0.3));
+            /* Añadido brillo dorado sutil */
+            transition: filter 3s;
+            animation: cakePulse 2s ease-in-out infinite 3s;
+        }
+
+        @keyframes cakePulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 25px rgba(255, 0, 0, 0.7));
+            }
+
+            50% {
+                transform: scale(1.08);
+                filter: drop-shadow(0 0 45px rgba(255, 0, 0, 0.9)) drop-shadow(0 0 70px rgba(139, 0, 0, 0.6)) drop-shadow(0 0 100px rgba(255, 215, 0, 0.4));
+            }
+        }
+
+        /* ============================================ */
+        /* --- FASE 1: SOBRE / CARTA ---                */
+        /* ============================================ */
+        .envelope-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 320px;
+            height: 210px;
+            z-index: 30;
+            perspective: 1200px;
+            transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s;
+            cursor: pointer;
+        }
+
+        .envelope-body {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a0000, #220000, #1a0000);
+            border: 2px solid #3a0505;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), inset 0 0 30px rgba(139, 0, 0, 0.1);
+        }
+
+        .flap {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #350505, #2b0000);
+            clip-path: polygon(0 0, 50% 50%, 100% 0);
+            transform-origin: top;
+            transition: transform 0.8s ease, z-index 0.1s;
+            z-index: 5;
+        }
+
+        .flap.open {
+            transform: rotateX(180deg);
+            z-index: 1;
+        }
+
+        .envelope-side-left {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #2b0000, #1f0000);
+            clip-path: polygon(0 0, 50% 50%, 0 100%);
+            z-index: 3;
+        }
+
+        .envelope-side-right {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(225deg, #2b0000, #1f0000);
+            clip-path: polygon(100% 0, 50% 50%, 100% 100%);
+            z-index: 3;
+        }
+
+        .pocket {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, #1a0000, #2b0000);
+            clip-path: polygon(0 100%, 50% 50%, 100% 100%);
+            z-index: 4;
+        }
+
+        .seal {
+            position: absolute;
+            top: 38%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 45px;
+            height: 45px;
+            background: radial-gradient(circle at 40% 35%, #cc0000, #8b0000, #500000);
+            border-radius: 50%;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.7), inset 0 1px 3px rgba(255, 255, 255, 0.1);
+            z-index: 6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Great Vibes', cursive;
+            color: #daa520;
+            font-size: 1.6rem;
+            transition: opacity 0.5s;
+            animation: sealPulse 2s ease-in-out infinite;
+            text-shadow: 0 0 5px rgba(218, 165, 32, 0.5);
+        }
+
+        @keyframes sealPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.7), 0 0 0px rgba(139, 0, 0, 0);
+            }
+
+            50% {
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.7), 0 0 20px rgba(139, 0, 0, 0.6);
+            }
+        }
+
+        .letter-paper {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            width: 296px;
+            height: 188px;
+            background: linear-gradient(135deg, #fdf5e6, #f5e6cc, #fdf5e6);
+            color: #1a0000;
+            padding: 20px;
+            box-sizing: border-box;
+            font-family: 'Playfair Display', serif;
+            font-size: 0.88rem;
+            text-align: center;
+            transition: transform 1s ease 0.5s, height 1s ease 0.5s;
+            z-index: 2;
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.15), inset 0 0 30px rgba(139, 0, 0, 0.03);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.6;
+        }
+
+        .letter-paper.visible {
+            transform: translateY(-70px);
+            z-index: 10;
+            height: 320px;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.3), 0 10px 60px rgba(0, 0, 0, 0.5);
+            transition: transform 1s ease 0.5s, height 1s ease 0.5s, box-shadow 1.5s ease 1s;
+            animation: letterGlow 4s infinite alternate 2s;
+        }
+
+        @keyframes letterGlow {
+            0% {
+                box-shadow: 0 0 40px rgba(255, 215, 0, 0.2), 0 10px 40px rgba(0, 0, 0, 0.3);
+            }
+
+            100% {
+                box-shadow: 0 0 70px rgba(255, 215, 0, 0.5), 0 10px 80px rgba(139, 0, 0, 0.2);
+            }
+        }
+
+        .letter-text {
+            opacity: 0;
+            transition: opacity 1s 1.5s;
+        }
+
+        .letter-text.show {
+            opacity: 1;
+        }
+
+        .letter-text h2 {
+            font-family: 'Great Vibes', cursive;
+            color: #8b0000;
+            font-size: 2.2rem;
+            margin: 0 0 10px 0;
+            text-shadow: 0 0 10px rgba(139, 0, 0, 0.2);
+        }
+
+        .letter-text p {
+            margin: 6px 0;
+            color: #2a0a0a;
+            font-style: italic;
+        }
+
+        .btn-next {
+            margin-top: 12px;
+            padding: 10px 28px;
+            background: linear-gradient(135deg, #8b0000, #660000);
+            color: #fdf5e6;
+            border: none;
+            font-family: 'Cinzel Decorative', serif;
+            cursor: pointer;
+            font-size: 0.75rem;
+            opacity: 0;
+            transition: opacity 1s 2s, transform 0.3s, box-shadow 0.3s;
+            border-radius: 3px;
+            letter-spacing: 1px;
+            box-shadow: 0 3px 15px rgba(139, 0, 0, 0.4);
+        }
+
+        .btn-next.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(139, 0, 0, 0.6);
+            background: linear-gradient(135deg, #aa0000, #8b0000);
+        }
+
+        /* Flecha para pasar de página */
+        .btn-page-arrow {
+            position: absolute;
+            bottom: 8px;
+            right: 10px;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #8b0000, #660000);
+            color: #daa520;
+            border: none;
+            border-radius: 50%;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s, box-shadow 0.3s;
+            z-index: 15;
+            animation: arrowPulse 1.5s ease-in-out infinite;
+        }
+
+        .btn-page-arrow:hover {
+            transform: scale(1.15);
+            box-shadow: 0 4px 15px rgba(139, 0, 0, 0.6);
+        }
+
+        @keyframes arrowPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 12px rgba(218, 165, 32, 0.5);
+            }
+        }
+
+        .page-indicator {
+            position: absolute;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 0.55rem;
+            color: rgba(139, 0, 0, 0.4);
+            letter-spacing: 2px;
+        }
+
+        .letter-page-content {
+            transition: opacity 0.5s ease, transform 0.6s ease, filter 0.6s ease;
+        }
+
+        .letter-page-content.dissolving {
+            opacity: 0;
+            transform: scale(0.85) rotate(-2deg);
+            filter: blur(3px) brightness(1.5);
+        }
+
+        .letter-page-content.entering {
+            opacity: 0;
+            transform: scale(1.05) translateY(10px);
+            filter: blur(2px);
+        }
+
+        .paper-shake {
+            animation: paperShake 0.4s ease;
+        }
+
+        @keyframes paperShake {
+            0% {
+                transform: translateY(-70px);
+            }
+
+            25% {
+                transform: translateY(-70px) rotate(1deg);
+            }
+
+            50% {
+                transform: translateY(-70px) rotate(-1deg);
+            }
+
+            75% {
+                transform: translateY(-70px) rotate(0.5deg);
+            }
+
+            100% {
+                transform: translateY(-70px);
+            }
+        }
+
+        /* ============================================ */
+        /* --- FASE 2: ROSA + FOTOS + PÉTALOS ---       */
+        /* ============================================ */
+        #roseCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 2s;
+            pointer-events: none;
+        }
+
+        body.phase-2 #roseCanvas {
+            opacity: 1;
+        }
+
+        .photo-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            overflow: hidden;
+            display: none;
+        }
+
+        body.phase-2 .photo-container {
+            display: block;
+        }
+
+        .falling-photo {
+            position: absolute;
+            top: -200px;
+            width: 130px;
+            height: 150px;
+            background: #fff;
+            padding: 6px 6px 28px 6px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+            transform-origin: center;
+            opacity: 0;
+            border-radius: 2px;
+        }
+
+        .falling-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: sepia(0.2) contrast(1.1) saturate(1.1);
+            border-radius: 1px;
+        }
+
+        .petal-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 4;
+            overflow: hidden;
+            display: none;
+        }
+
+        body.phase-2 .petal-container {
+            display: block;
+        }
+
+        .falling-petal {
+            position: absolute;
+            top: -40px;
+            font-size: 1.8rem;
+            opacity: 0;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+
+        .phase2-text {
+            position: fixed;
+            bottom: 12%;
+            width: 100%;
+            text-align: center;
+            color: #fff;
+            font-family: 'Great Vibes', cursive;
+            font-size: 2.8rem;
+            text-shadow: 0 0 15px rgba(139, 0, 0, 0.8), 0 0 40px rgba(139, 0, 0, 0.3);
+            opacity: 0;
+            transition: opacity 2s 2s;
+            z-index: 50;
+            pointer-events: none;
+            letter-spacing: 2px;
+        }
+
+        body.phase-2 .phase2-text {
+            opacity: 1;
+        }
+
+        .btn-final {
+            position: fixed;
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 36px;
+            background: transparent;
+            border: 1px solid #8b0000;
+            color: #ff2020;
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 1rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.4s;
+            z-index: 100;
+            pointer-events: none;
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px rgba(139, 0, 0, 0.5);
+        }
+
+        .btn-final:hover {
+            background: rgba(139, 0, 0, 0.9);
+            color: #fdf5e6;
+            box-shadow: 0 0 30px rgba(139, 0, 0, 0.6), inset 0 0 20px rgba(255, 0, 0, 0.1);
+            border-color: #ff0000;
+            text-shadow: none;
+        }
+
+        body.phase-2 .btn-final {
+            opacity: 1;
+            transition-delay: 6s;
+            pointer-events: auto;
+            animation: pulseGlow 2s infinite ease-in-out 6.5s;
+        }
+
+        @keyframes pulseGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 10px rgba(255, 68, 68, 0.4);
+                transform: translateX(-50%) scale(1);
+            }
+
+            50% {
+                box-shadow: 0 0 40px rgba(255, 68, 68, 1), inset 0 0 15px rgba(255, 255, 255, 0.2);
+                transform: translateX(-50%) scale(1.08);
+                filter: brightness(1.2);
+            }
+        }
+
+        /* ============================================ */
+        /* --- FASE 3: CORAZÓN EMOJI (LIGERO) ---       */
+        /* ============================================ */
+        #emojiHeart {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 15rem;
+            z-index: 60;
+            opacity: 0;
+            transition: opacity 2s;
+            pointer-events: none;
+            filter: drop-shadow(0 0 30px rgba(255, 0, 0, 0.8));
+            animation: heartPulseRotate 4s ease-in-out infinite;
+        }
+
+        body.phase-3 #emojiHeart {
+            opacity: 1;
+        }
+
+        @keyframes heartPulseRotate {
+            0% {
+                transform: translate(-50%, -50%) scale(1) rotate(0deg);
+            }
+
+            25% {
+                transform: translate(-50%, -50%) scale(1.1) rotate(5deg);
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.2) rotate(0deg);
+            }
+
+            75% {
+                transform: translate(-50%, -50%) scale(1.1) rotate(-5deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1) rotate(0deg);
+            }
+        }
+
+        .phase3-name {
+            position: fixed;
+            top: 18%;
+            width: 100%;
+            text-align: center;
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 4.8rem;
+            /* Aumentado de 3.5rem */
+            font-weight: 900;
+            letter-spacing: 12px;
+            background: linear-gradient(180deg, #ffffff 0%, #ff0000 40%, #8b0000 70%, #300000 100%);
+            /* Rojo más vivo */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            z-index: 70;
+            opacity: 0;
+            transition: opacity 2s 1s;
+            filter: drop-shadow(0 0 25px rgba(255, 0, 0, 0.5));
+            animation: shimmer 3s ease-in-out infinite 3s;
+        }
+
+        body.phase-3 .phase3-name {
+            opacity: 1;
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                background: linear-gradient(180deg, #ffffff 0%, #ff4444 40%, #8b0000 70%, #300000 100%);
+                -webkit-background-clip: text;
+                background-clip: text;
+            }
+
+            50% {
+                background: linear-gradient(180deg, #ffd700 0%, #ff6666 40%, #cc0000 70%, #500000 100%);
+                -webkit-background-clip: text;
+                background-clip: text;
+            }
+        }
+
+        .phase3-msg {
+            position: fixed;
+            bottom: 10%;
+            width: 100%;
+            text-align: center;
+            font-family: 'Great Vibes', cursive;
+            font-size: 2.2rem;
+            color: #ff3333;
+            /* Rojo más brillante y resaltado */
+            z-index: 70;
+            letter-spacing: 2px;
+            opacity: 0;
+            transition: opacity 2s 2s;
+            text-shadow: 0 0 15px rgba(255, 0, 0, 0.6), 0 0 5px rgba(255, 255, 255, 0.2);
+        }
+
+        /* MAGIC PETALS ELIMINADOS POR RENDIMIENTO */
+
+        body.phase-3 .phase3-msg {
+            opacity: 1;
+        }
+
+        /* ============================================ */
+        /* --- STICKER DECORATION (Paginas & Lluvia) --- */
+        /* ============================================ */
+        /* Sticker en la página de la carta */
+        .page-sticker {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            /* Mover a la izquierda */
+            width: 70px;
+            height: 70px;
+            background-size: contain;
+            /* Ajuste para imagen individual */
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.9;
+            filter: contrast(1.1) brightness(1.05);
+            /* Mejorar colores */
+            transform: rotate(-5deg) scale(1.15);
+            /* ZOOM visual */
+            mix-blend-mode: multiply;
+            /* Efecto "impreso" en el papel */
+            border-radius: 10px;
+            /* Bordes suaves */
+            animation: floatSticker 3s ease-in-out infinite;
+        }
+
+        /* Stickers fuera de la carta */
+        .external-sticker {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 1s, transform 1s;
+            pointer-events: none;
+            z-index: 5;
+            mix-blend-mode: multiply;
+            filter: contrast(1.1) brightness(1.05);
+        }
+
+        .external-sticker.visible {
+            opacity: 1;
+        }
+
+        .letter-h2 {
+            font-family: 'Great Vibes', cursive;
+            color: #8b0000;
+            font-size: 2.2rem;
+            margin: 0 0 10px 0;
+            text-shadow: 0 0 10px rgba(139, 0, 0, 0.2);
+        }
+
+        .letter-p {
+            margin: 6px 0;
+            color: #2a0a0a;
+            font-style: italic;
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+
+        .letter-sig {
+            margin: 10px 0 0 0;
+            color: #550000;
+            /* Rojo más profundo */
+            font-family: 'Great Vibes', cursive;
+            font-size: 1.4rem;
+            font-weight: bold;
+            text-shadow: 0 0 8px rgba(139, 0, 0, 0.2);
+        }
+
+        .highlight {
+            color: #660000;
+            /* Rojo sangre más oscuro para mayor legibilidad */
+            font-weight: 900;
+            font-family: 'Great Vibes', cursive;
+            font-size: 1.25em;
+            text-shadow: 0 0 10px rgba(180, 0, 0, 0.2), 0.5px 0.5px 1px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+        }
+
+        .secret-word {
+            display: inline-block;
+            font-family: inherit;
+            font-weight: 900;
+            /* Más gruesa para que "reteña" más el brillo */
+            color: #660000;
+            /* Color base oscuro */
+            text-shadow: 0 0 5px rgba(139, 0, 0, 0.4);
+            animation: secretGlow 3s infinite alternate;
+            cursor: pointer;
+            transition: color 0.5s;
+        }
+
+        @keyframes secretGlow {
+            0% {
+                text-shadow: 0 0 3px rgba(139, 0, 0, 0.3), 0 0 1px rgba(0, 0, 0, 0.2);
+            }
+
+            100% {
+                text-shadow: 0 0 12px rgba(255, 0, 0, 0.6), 0 0 5px rgba(139, 0, 0, 0.4);
+                color: #8b0000;
+            }
+        }
+
+        @keyframes floatSticker {
+
+            0%,
+            100% {
+                transform: rotate(-5deg) scale(1.15) translateY(0);
+            }
+
+            50% {
+                transform: rotate(-3deg) scale(1.18) translateY(-4px);
+            }
+        }
+
+        /* Sticker cayendo ELIMINADO por rendimiento */
+
+        /* ============================================ */
+        /* --- CONFETTI CANVAS ---                      */
+        /* ============================================ */
+        canvas#confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 25;
+            width: 100%;
+            height: 100%;
+        }
+
+
+        @keyframes twinkle {
+
+            0%,
+            100% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: scale(1.2);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .envelope-container {
+                width: 260px;
+                height: 175px;
+            }
+
+            .letter-paper {
+                width: 240px;
+                height: 155px;
+                padding: 14px;
+                font-size: 0.75rem;
+            }
+
+            .letter-paper.visible {
+                transform: translateY(-60px);
+                height: 320px;
+            }
+
+            .letter-h2 {
+                font-size: 1.5rem;
+            }
+
+            .letter-p {
+                font-size: 0.72rem;
+                line-height: 1.4;
+            }
+
+            .btn-next {
+                padding: 6px 15px;
+                font-size: 0.65rem;
+            }
+
+            .btn-page-arrow {
+                width: 28px;
+                height: 28px;
+                font-size: 0.8rem;
+            }
+
+            .hint {
+                top: 240px;
+                font-size: 0.75rem;
+            }
+
+            .scene-container {
+                bottom: 10%;
+                transform: translateX(-50%) scale(0.85);
+                filter: brightness(0.08) sepia(1) hue-rotate(320deg);
+                /* Un poco más visible en la oscuridad para móvil */
+            }
+
+            body.lights-on .scene-container {
+                filter: brightness(1.25) contrast(1.1);
+            }
+
+            body.lights-on .cake-heart {
+                filter: drop-shadow(0 0 30px rgba(255, 0, 0, 1)) drop-shadow(0 0 60px rgba(139, 0, 0, 0.8)) drop-shadow(0 0 100px rgba(255, 215, 0, 0.5)) !important;
+            }
+
+            .phase2-text {
+                font-size: 1.8rem;
+                bottom: 14%;
+                padding: 0 15px;
+            }
+
+            .btn-final {
+                padding: 10px 24px;
+                font-size: 0.85rem;
+            }
+
+            .phase3-name {
+                font-size: 3rem;
+                /* Aumentado de 2.2rem */
+                letter-spacing: 6px;
+                top: 12%;
+            }
+
+            .phase3-msg {
+                font-size: 1.5rem;
+                bottom: 8%;
+                padding: 0 20px;
+                color: #ff4444;
+            }
+
+            #emojiHeart {
+                font-size: 8rem;
+                /* Más pequeño en móvil */
+            }
+
+            .falling-photo {
+                width: 90px;
+                height: 105px;
+                padding: 4px 4px 18px 4px;
+            }
+
+            /* Ajustes para retos en móvil */
+            .prompt-box {
+                padding: 25px 20px;
+                width: 95%;
+            }
+
+            .prompt-box h3 {
+                font-size: 1.2rem;
+            }
+
+            .slot-machine {
+                transform: scale(0.7);
+                padding: 10px;
+                margin: 0 10px;
+            }
+
+            .slot {
+                width: 65px;
+                height: 100px;
+                font-size: 2.8rem;
+            }
+
+            .symbol {
+                height: 100px;
+                width: 65px;
+            }
+
+            .sad-text {
+                font-size: 1.4rem;
+            }
+
+            #success-feedback {
+                font-size: 2.2rem;
+                width: 90%;
+                text-align: center;
+            }
+        }
+
+        /* ============================================ */
+        /* --- SECRET PROMPT & SLOT MACHINE ---        */
+        /* ============================================ */
+        #secret-prompt-container,
+        #slot-machine-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        #secret-prompt-container.visible,
+        #slot-machine-container.visible {
+            display: flex;
+            opacity: 1;
+        }
+
+        .prompt-box {
+            background: linear-gradient(135deg, #1a0000, #2b0000);
+            border: 2px solid #8b0000;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(139, 0, 0, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.8);
+            max-width: 90%;
+            width: 400px;
+        }
+
+        .prompt-box h3 {
+            color: #ff2020;
+            font-family: 'Cinzel Decorative', serif;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px rgba(139, 0, 0, 0.8);
+        }
+
+        .prompt-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #8b0000;
+            color: #fdf5e6;
+            padding: 12px;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            text-align: center;
+            border-radius: 5px;
+            margin-bottom: 25px;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .prompt-input:focus {
+            border-color: #ff2020;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+        }
+
+        .prompt-btn {
+            background: linear-gradient(135deg, #8b0000, #300000);
+            color: white;
+            border: 1px solid #ff2020;
+            padding: 10px 30px;
+            font-family: 'Cinzel Decorative', serif;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            letter-spacing: 2px;
+        }
+
+        .prompt-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(139, 0, 0, 0.8);
+        }
+
+        .forgot-btn {
+            background: transparent;
+            color: rgba(255, 255, 255, 0.4);
+            border: none;
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin-top: 15px;
+            text-decoration: underline;
+            transition: color 0.3s;
+        }
+
+        .forgot-btn:hover {
+            color: #ff4444;
+        }
+
+        #hint-text {
+            color: #ff6666;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            font-style: italic;
+            min-height: 1.2em;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .hint-visible {
+            opacity: 1 !important;
+        }
+
+        /* SAD PHASE STYLES */
+        #sad-phase-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 2s ease;
+        }
+
+        #sad-phase-overlay.visible {
+            display: flex;
+            opacity: 1;
+        }
+
+        #rain-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .drop {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            width: 1px;
+            height: 50px;
+            top: -100px;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(110vh);
+            }
+        }
+
+        .sad-content {
+            z-index: 2005;
+            text-align: center;
+            max-width: 80%;
+        }
+
+        .sad-text {
+            font-family: 'Cinzel Decorative', serif;
+            color: #555;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+            animation: fadeWave 4s infinite alternate;
+        }
+
+        @keyframes fadeWave {
+            0% {
+                opacity: 0.3;
+                transform: scale(0.98);
+            }
+
+            100% {
+                opacity: 0.8;
+                transform: scale(1.02);
+            }
+        }
+
+        .sad-btn {
+            background: none;
+            border: 1px solid #333;
+            color: #777;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: inherit;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+
+        .sad-btn:hover {
+            color: #fff;
+            border-color: #fff;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .floating-option {
+            position: absolute;
+            bottom: 15%;
+            animation: floatSlow 6s infinite ease-in-out;
+            color: #8b0000;
+            text-decoration: underline;
+            cursor: pointer;
+            font-style: italic;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s ease;
+            z-index: 2010;
+        }
+
+        .black-rose {
+            position: absolute;
+            font-size: 2rem;
+            top: -50px;
+            pointer-events: none;
+            z-index: 2002;
+            animation: fallRotate linear forwards;
+        }
+
+        @keyframes fallRotate {
+            to {
+                transform: translateY(110vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        #success-feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #daa520;
+            font-family: 'Great Vibes', cursive;
+            font-size: 3rem;
+            z-index: 3000;
+            text-shadow: 0 0 20px rgba(218, 165, 32, 0.8);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        #success-feedback.visible {
+            opacity: 1;
+            transform: translate(-50%, -60%);
+        }
+
+        @keyframes floatSlow {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        /* BACKGROUND GÓTICO PARA SLOTS */
+        body.phase-slots {
+            background: radial-gradient(circle at center, #2b0000 0%, #150000 40%, #000000 100%) !important;
+            transition: background 2s ease;
+        }
+
+        body.phase-slots::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* SLOT MACHINE STYLES */
+        .slot-machine {
+            background: linear-gradient(to bottom, #2a2a2a, #111, #2a2a2a);
+            border: 8px solid #555;
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 0 60px rgba(0, 0, 0, 1), 0 0 20px rgba(139, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+        }
+
+        .slot-container {
+            display: flex;
+            gap: 15px;
+            background: #000;
+            padding: 15px;
+            border: 4px inset #333;
+            border-radius: 10px;
+        }
+
+        .slot {
+            width: 80px;
+            height: 120px;
+            background: #111;
+            border: 2px solid #444;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3.5rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slot-content {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            top: 0;
+            transition: top 3s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+        }
+
+        .symbol {
+            height: 120px;
+            /* Unificado */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 80px;
+        }
+
+        /* Lever */
+        .lever-container {
+            width: 40px;
+            height: 150px;
+            margin-left: 30px;
+            position: relative;
+        }
+
+        .lever-base {
+            width: 15px;
+            height: 100px;
+            background: linear-gradient(to right, #444, #777, #444);
+            margin: 0 auto;
+            border-radius: 10px;
+            position: relative;
+            transform-origin: bottom;
+            transition: transform 0.5s;
+        }
+
+        .lever-knob {
+            width: 35px;
+            height: 35px;
+            background: radial-gradient(circle at 30% 30%, #ff4444, #8b0000);
+            border-radius: 50%;
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .lever-base.pulled {
+            transform: rotateX(60deg) scaleY(0.7);
+        }
+
+        .shake {
+            animation: shake 0.5s linear;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20%,
+            60% {
+                transform: translateX(-10px);
+            }
+
+            40%,
+            80% {
+                transform: translateX(10px);
+            }
+        }
+
+        @media (max-width: 380px) {
+            .envelope-container {
+                width: 220px;
+                height: 150px;
+            }
+
+            .letter-paper {
+                width: 200px;
+                height: 130px;
+                font-size: 0.68rem;
+                padding: 10px;
+            }
+
+            .letter-paper.visible {
+                height: 250px;
+            }
+
+            .phase3-name {
+                font-size: 1.8rem;
+                letter-spacing: 4px;
+            }
+
+            .slot-machine {
+                transform: scale(0.65);
+                /* Ajustado para mejor visibilidad */
+                margin-left: -55px;
+            }
+
+            .btn-magic {
+                top: 22%;
+                left: 10%;
+            }
+
+            .prompt-box h3 {
+                font-size: 1rem;
+            }
+
+            .prompt-input {
+                font-size: 0.9rem;
+                padding: 10px;
+            }
+
+            .sad-text {
+                font-size: 1.1rem;
+            }
+        }
+
+        /* COLOR CRIMSON PARA LETRAS I y U */
+        .symbol-crimson {
+            color: #DC143C !important;
+            text-shadow: 0 0 15px rgba(220, 20, 60, 0.8), 0 0 5px rgba(255, 255, 255, 0.3) !important;
+            font-weight: 900;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- === CAPA DE ILUMINACIÓN === -->
+    <div id="room-overlay"></div>
+
+    <!-- === FASE 1: LÁMPARA === -->
+    <div class="lamp-container">
+        <div class="wire"></div>
+        <div class="bulb-socket"></div>
+        <div class="bulb" id="bulb"></div>
+        <div class="pull-string-area" id="stringArea" onclick="pullSwitch()">
+            <div class="pull-string" id="string">
+                <div class="pull-knob"></div>
+            </div>
+        </div>
+    </div>
+    <div class="hint" id="hintText">Tira de la cuerda...</div>
+
+    <!-- === FASE 1: MESA + PASTEL === -->
+    <div class="scene-container">
+        <div class="cake-heart"></div>
+        <div class="cake-pedestal"></div>
+        <div class="table">
+            <div class="table-leg leg-left"></div>
+            <div class="table-leg leg-right"></div>
+        </div>
+    </div>
+
+    <!-- === FASE 1: SOBRE === -->
+    <div class="envelope-container" id="envelope" onclick="openLetter()">
+        <div class="flap" id="flap"></div>
+        <div class="envelope-side-left"></div>
+        <div class="envelope-side-right"></div>
+        <div class="pocket"></div>
+        <div class="seal" id="seal">S</div>
+        <div class="envelope-body"></div>
+        <div class="letter-paper" id="paper">
+            <div id="externalStickers"></div>
+            <div class="letter-text" id="letterContent">
+                <div class="letter-page-content" id="letterPageContent"></div>
+                <span class="page-indicator" id="pageIndicator"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- === FASE 2: ROSA + FOTOS === -->
+    <canvas id="roseCanvas"></canvas>
+    <div class="photo-container" id="photoContainer"></div>
+    <div class="petal-container" id="petalContainer"></div>
+    <div class="phase2-text" id="phase2Text">Gracias por coincidir en esta vida junto a mí... 🌹</div>
+    <button class="btn-final" id="btnFinal" onclick="goToPhase3()">Por Siempre ❤️</button>
+
+    <!-- === FASE 3: CORAZÓN EMOJI === -->
+    <div id="emojiHeart">❤️</div>
+    <div class="phase3-name" id="phase3Name">SHARON</div>
+    <div class="phase3-msg" id="phase3Msg">Sharon, eres la luz que guía mi camino y perteneces al sueño del que nunca
+        espero despertar.<br>¡Feliz Dia de San Valentín! 😘 ❤️</div>
+
+    <!-- === RRETO: MENSAJE SECRETO === -->
+    <div id="secret-prompt-container">
+        <div class="prompt-box" id="promptBox">
+            <h3>¿Descubriste el mensaje oculto?</h3>
+            <div id="hint-text"></div>
+            <input type="text" class="prompt-input" id="secretInput" placeholder="Escribe el mensaje aquí..."
+                autocomplete="off">
+            <button class="prompt-btn" onclick="checkSecretMessage()">Revelar Sorpresa</button>
+            <button class="forgot-btn" onclick="goSad()">¿Había palabra secreta? 😨</button>
+        </div>
+    </div>
+
+    <!-- === EFECTO DE BROMA: FASE TRISTE === -->
+    <div id="sad-phase-overlay">
+        <div id="rain-container"></div>
+        <div class="sad-content">
+            <div class="sad-text" id="sadText">Oh... no lo puedo creer... :(</div>
+            <div id="sadOptions" style="display:none;">
+                <p style="color:#444; margin-bottom:15px;">¿Quieres volver a buscar en la carta?</p>
+                <button class="sad-btn" onclick="resetToLetter()">Sí, iré a buscar mejor 🧐</button>
+                <button class="sad-btn" onclick="askForHints()">No puedo, dame pistas 😭</button>
+            </div>
+        </div>
+        <div class="floating-option" id="cheerBtn" onclick="cheerUp()">No estés triste :C</div>
+    </div>
+
+    <div id="success-feedback">¡Sabía que lo encontrarías! ✨</div>
+
+    <!-- === RETO: TRAGAMONEDAS GÓTICO === -->
+    <div id="slot-machine-container">
+        <div class="slot-machine">
+            <div class="slot-container">
+                <div class="slot" id="slot1">
+                    <div class="slot-content" id="content1"></div>
+                </div>
+                <div class="slot" id="slot2">
+                    <div class="slot-content" id="content2"></div>
+                </div>
+                <div class="slot" id="slot3">
+                    <div class="slot-content" id="content3"></div>
+                </div>
+            </div>
+            <div class="lever-container">
+                <div class="lever-base" id="leverBase">
+                    <div class="lever-knob" onclick="spinSlots()"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- === CONFETTI === -->
+    <canvas id="confettiCanvas"></canvas>
+
+    <!-- === CAT GIF ELIMINADO === -->
+
+
+
+    <script>
+        // ========================================
+        // ESTADO GLOBAL
+        // ========================================
+        let isLit = false;
+        let isOpen = false;
+
+        // =============================================
+        // 📸 FOTOS DE SHARON - ¡EDITA AQUÍ!
+        // =============================================
+        // CÓMO AÑADIR TUS FOTOS:
+        // 1. Coloca tus imágenes en la MISMA CARPETA que este archivo HTML
+        //    (por ejemplo: c:\Users\Familia\Desktop\PRUEBA\)
+        // 2. Reemplaza los links de abajo con el nombre del archivo.
+        //    Ejemplo: 'foto1.jpg'
+        // 3. Puedes poner CUANTAS QUIERAS, las fotos caen en ciclo infinito.
+        //    Recomendado: entre 5 y 20 fotos para buen efecto.
+        // 4. Formatos válidos: .jpg, .jpeg, .png, .webp, .gif
+        //
+        // EJEMPLO CON ARCHIVOS LOCALES:
+        //   const yourPhotos = [
+        //       'sharon1.jpg',
+        //       'recuerdo_playa.png',
+        //       'juntos_navidad.jpg',
+        //       'selfie.jpg',
+        //   ];
+        //
+        // =============================================
+        // 📸 FOTOS DE SHARON
+        // =============================================
+        const yourPhotos = [
+            'https://i.ibb.co/4Zqv41d5/1.jpg',
+            'https://i.ibb.co/jv8pTnpk/2.jpg',
+            'https://i.ibb.co/BHkbZyTF/3.jpg',
+            'https://i.ibb.co/zhjr8NtX/4.jpg',
+            'https://i.ibb.co/p6MyXPg0/5.jpg',
+            'https://i.ibb.co/kgmGkccK/6.jpg',
+            'https://i.ibb.co/pv7DQvWT/7.jpg',
+            'https://i.ibb.co/Qjbg4P2c/8.jpg'
+        ];
+
+        // ========================================
+        // FASE 1: LÁMPARA CON PARPADEO REALISTA
+        // ========================================
+        function pullSwitch() {
+            if (isLit) return;
+            isLit = true;
+
+            const string = document.getElementById('string');
+            const bulb = document.getElementById('bulb');
+            const hint = document.getElementById('hintText');
+
+            // Animación de tirón
+            string.classList.add('pull-anim');
+            setTimeout(() => string.classList.remove('pull-anim'), 400);
+
+            // Secuencia de parpadeo realista (como bombilla vieja)
+            const flicker = [
+                { delay: 250, bg: '#555', shadow: '0 0 5px rgba(255,250,200,0.2)' },
+                { delay: 400, bg: '#333', shadow: 'none' },
+                { delay: 550, bg: '#777', shadow: '0 0 15px rgba(255,250,200,0.3)' },
+                { delay: 650, bg: '#444', shadow: 'none' },
+                { delay: 800, bg: '#999', shadow: '0 0 25px rgba(255,200,50,0.5)' },
+                { delay: 900, bg: '#555', shadow: 'none' },
+                { delay: 1000, bg: '#bbb', shadow: '0 0 30px rgba(255,200,50,0.6)' },
+                { delay: 1050, bg: '#666', shadow: '0 0 5px rgba(255,200,50,0.1)' },
+            ];
+
+            flicker.forEach(f => {
+                setTimeout(() => {
+                    bulb.style.background = f.bg;
+                    bulb.style.boxShadow = f.shadow;
+                }, f.delay);
+            });
+
+            // Encendido final
+            setTimeout(() => {
+                bulb.classList.add('on');
+                document.body.classList.add('lights-on');
+                hint.classList.add('hidden');
+                fireConfetti();
+                startMelody(); // Iniciar melodía romántica
+
+
+                // Pausa de 5 segundos para admirar la escena antes de mostrar el sobre
+                setTimeout(() => {
+                    document.getElementById('envelope').style.transform = 'translate(-50%, -50%) scale(1)';
+                }, 5000);
+
+            }, 1200);
+        }
+
+        // ========================================
+        // CARTA MULTI-PÁGINA
+        // ========================================
+        const letterPages = [
+            {
+                title: 'Mi querida Sharon',
+                text: '<span class="secret-word">sharon</span>, este detalle te lo entrego con mucho amor. Desearía vernos, pero lastimosamente es muy difícil. De igual manera, sin importar el día, mes o año, tú eres <span class="highlight">la persona más importante en mi vida</span>.',
+                stickerUrl: 'https://i.ibb.co/wFR4Ny1b/imagen-2026-02-11-225213636.png'
+            },
+            {
+                title: null,
+                text: '<span class="highlight">Te quiero con todo mi corazón</span> y agradezco el día en que nos conocimos, y más aún el día en que confiaste en mí para ser tu amigo. Eres alguien muy significativa en mi vida y quiero que esto siga <span class="highlight">por siempre y para siempre</span>.',
+                stickerUrl: 'https://i.ibb.co/G4KW3dkC/imagen-2026-02-11-225227907.png'
+            },
+            {
+                title: null,
+                text: '<span class="secret-word">deseo</span> verte bien y que siempre sigas adelante. Eres fuerte y sé que lo lograrás, y <span class="highlight">siempre me tendrás a tu lado</span> como un amigo, pero más como tu apoyo para lo que necesites.',
+                stickerUrl: 'https://i.ibb.co/pvGpmqDJ/imagen-2026-02-11-225243048.png'
+            },
+            {
+                title: null,
+                text: 'Nunca te juzgaré, nunca te olvidaré, nunca me molestaré contigo, pero más importante, <span class="highlight">nunca dejaré de quererte y <span class="secret-word">amarte</span></span>. Nunca olvides la maravillosa y hermosa chica que eres. Yo sé que tendrás un futuro exitoso y saldrás adelante.',
+                stickerUrl: 'https://i.ibb.co/rKj2xZwp/imagen-2026-02-11-225256582.png'
+            },
+            {
+                title: null,
+                text: 'Con todo mi cariño y corazón, espero disfrutes este regalo hasta que nos volvamos a encontrar.',
+                signature: 'PP: <span class="secret-word">siempre</span> estare para ti con todo mi cariño y amor de tu amigo Juan 💌 💌',
+                stickerUrl: 'https://i.ibb.co/qLwnzKzH/imagen-2026-02-11-225320031.png'
+            }
+        ];
+
+        let currentPage = 0;
+
+        function renderLetterPage(pageIndex, animate) {
+            const container = document.getElementById('letterPageContent');
+            const indicator = document.getElementById('pageIndicator');
+            const page = letterPages[pageIndex];
+            const isLast = pageIndex === letterPages.length - 1;
+
+            // Build page HTML
+            let html = '';
+            if (page.title) {
+                html += `<h2 class="letter-h2">${page.title}</h2>`;
+            }
+            html += `<p class="letter-p">${page.text}</p>`;
+            if (page.signature) {
+                html += `<p class="letter-sig">${page.signature}</p>`;
+            }
+
+            // --- MANEJO DE STICKERS (FUERA DE LA CARTA) ---
+            const stickerContainer = document.getElementById('externalStickers');
+            stickerContainer.innerHTML = ''; // Limpiar stickers anteriores
+
+            if (page.stickerUrl) {
+                const sticker = document.createElement('div');
+                sticker.className = 'external-sticker';
+                sticker.style.backgroundImage = `url('${page.stickerUrl}')`;
+
+                // Posiciones aleatorias fuera de la carta (solo abajo)
+                const positions = [
+                    { bottom: '10px', left: '-60px', rot: '-10deg' },
+                    { bottom: '10px', right: '-60px', rot: '10deg' }
+                ];
+                const pos = positions[pageIndex % positions.length];
+
+                Object.assign(sticker.style, {
+                    top: pos.top || 'auto',
+                    bottom: pos.bottom || 'auto',
+                    left: pos.left || 'auto',
+                    right: pos.right || 'auto',
+                    transform: `rotate(${pos.rot}) scale(1.2)`
+                });
+
+                stickerContainer.appendChild(sticker);
+                requestAnimationFrame(() => sticker.classList.add('visible'));
+            }
+
+            // Arrow or final button
+            if (isLast) {
+                html += `<button class="btn-next show" onclick="startPhase2(event)" style="margin-top:10px;">Ver Recuerdos \u2728</button>`;
+            } else {
+                html += `<button class="btn-page-arrow" onclick="nextLetterPage(event)" title="Siguiente">\u25B6</button>`;
+            }
+
+            indicator.textContent = `${pageIndex + 1} / ${letterPages.length}`;
+
+            if (animate) {
+                // Step 1: Dissolve current text with dramatic effect
+                container.classList.add('dissolving');
+
+                // Step 2: After dissolve, swap content and enter
+                setTimeout(() => {
+                    container.innerHTML = html;
+                    container.classList.remove('dissolving');
+                    container.classList.add('entering');
+
+                    // Step 3: Reveal new text
+                    requestAnimationFrame(() => {
+                        setTimeout(() => {
+                            container.classList.remove('entering');
+                        }, 50);
+                    });
+                }, 600);
+            } else {
+                container.innerHTML = html;
+            }
+        }
+
+        function nextLetterPage(e) {
+            e.stopPropagation();
+            if (currentPage >= letterPages.length - 1) return;
+
+            // Shake the paper for impact
+            const paper = document.getElementById('paper');
+            paper.classList.add('paper-shake');
+            setTimeout(() => paper.classList.remove('paper-shake'), 400);
+
+            // Big golden particle burst — 3 waves
+            const rect = paper.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            createLetterParticles(cx, cy, rect.width, rect.height);
+            setTimeout(() => createLetterParticles(cx, cy, rect.width, rect.height), 150);
+            setTimeout(() => createLetterParticles(cx, cy, rect.width, rect.height), 300);
+
+            currentPage++;
+            renderLetterPage(currentPage, true);
+        }
+
+        function createLetterParticles(cx, cy, w, h) {
+            const colors = ['#daa520', '#ffd700', '#ffec8b', '#fff8dc', '#b8860b', '#f0c040'];
+            for (let i = 0; i < 55; i++) {
+                // Spread particles across the full letter area
+                const startX = cx + (Math.random() - 0.5) * w * 0.9;
+                const startY = cy + (Math.random() - 0.5) * h * 0.7;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 8 + 3;
+                particles.push({
+                    x: startX,
+                    y: startY,
+                    vx: Math.cos(angle) * speed * (0.5 + Math.random()),
+                    vy: Math.sin(angle) * speed * 0.7 + Math.random() * 4,
+                    size: Math.random() * 5 + 1.5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 1,
+                    decay: 0.008 + Math.random() * 0.012,
+                    rotation: Math.random() * 360,
+                    rotSpeed: (Math.random() - 0.5) * 20
+                });
+            }
+        }
+
+        // ========================================
+        // FASE 1: ABRIR CARTA
+        // ========================================
+        function openLetter() {
+            if (!isLit || isOpen) return;
+            isOpen = true;
+            document.getElementById('seal').style.opacity = '0';
+            document.getElementById('flap').classList.add('open');
+            document.getElementById('paper').classList.add('visible');
+            document.getElementById('letterContent').classList.add('show');
+
+            // Render first page
+            currentPage = 0;
+            renderLetterPage(0, false);
+        }
+
+        // ========================================
+        // FASE 2: TRANSICIÓN ELEGANTE
+        // ========================================
+        function startPhase2(e) {
+            e.stopPropagation();
+
+            const env = document.getElementById('envelope');
+
+            // Explosión de partículas rojas/doradas
+            createExplosion(window.innerWidth / 2, window.innerHeight / 2 + 50);
+
+            // Animación de "latido final" + desaparición
+            env.style.transition = 'transform 0.5s, opacity 0.5s';
+            env.style.transform = 'translate(-50%, -50%) scale(1.2)';
+            env.style.opacity = '0';
+            setTimeout(() => { env.style.display = 'none'; }, 600);
+
+            // Activar Fase 2
+            setTimeout(() => {
+                document.body.classList.add('phase-2');
+                document.body.style.backgroundColor = '#020002';
+
+                initRose();
+                animateRose();
+                startDroppingPhotos();
+                startDroppingPetals();
+                // startDroppingStickers() ELIMINADO
+            }, 400);
+        }
+
+        // ========================================
+        // FASE 3: TRANSICIÓN AL CORAZÓN 3D
+        // ========================================
+        // ========================================
+        // FASE 3: TRANSICIÓN CON RETOS (PROMPT + SLOTS)
+        // ========================================
+        function goToPhase3() {
+            // En lugar de ir directo, mostramos el prompt
+            const promptContainer = document.getElementById('secret-prompt-container');
+            promptContainer.style.display = 'flex';
+            setTimeout(() => promptContainer.classList.add('visible'), 50);
+        }
+
+        let failCount = 0;
+        let fromSad = false; // Flag para saber si viene de la fase triste
+
+        function checkSecretMessage() {
+            const inputEl = document.getElementById('secretInput');
+            const input = inputEl.value.trim().toLowerCase();
+            const promptBox = document.getElementById('promptBox');
+            const hintEl = document.getElementById('hint-text');
+
+            const keywords = ['sharon', 'deseo', 'amarte', 'siempre'];
+            const allFound = keywords.every(word => input.includes(word));
+
+            if (allFound) {
+                const promptContainer = document.getElementById('secret-prompt-container');
+
+                if (fromSad) {
+                    // Refuerzo positivo
+                    const feedback = document.getElementById('success-feedback');
+                    feedback.classList.add('visible');
+                    setTimeout(() => {
+                        feedback.classList.remove('visible');
+                        promptContainer.classList.remove('visible');
+                        setTimeout(() => {
+                            promptContainer.style.display = 'none';
+                            showSlotMachine();
+                        }, 1000);
+                    }, 2000);
+                    fromSad = false; // Reset flag
+                } else {
+                    promptContainer.classList.remove('visible');
+                    cleanupPhase2(); // Limpiar fondo inmediatamente
+                    setTimeout(() => {
+                        promptContainer.style.display = 'none';
+                        showSlotMachine();
+                    }, 1000);
+                }
+            } else {
+                failCount++;
+                promptBox.classList.add('shake');
+                inputEl.style.borderColor = '#ff0000';
+
+                // Mostrar pistas según fallos
+                let hint = "";
+                if (failCount === 1) hint = "¿Segura? Relee la carta... hay palabras que brillan.";
+                else if (failCount === 2) hint = "Pista: Son 4 palabras... tu nombre es la primera.";
+                else if (failCount === 3) hint = "Casi... Sharon, Deseo, Amarte... y falta una.";
+                else if (failCount >= 4) {
+                    hint = "¡Bueno, te ayudo! Era: Sharon deseo amarte siempre";
+                    inputEl.value = "Sharon deseo amarte siempre";
+                    // Más tiempo para que lea el mensaje de ayuda
+                    setTimeout(checkSecretMessage, 3500);
+                }
+
+                hintEl.textContent = hint;
+                hintEl.classList.add('hint-visible');
+
+                setTimeout(() => {
+                    promptBox.classList.remove('shake');
+                    inputEl.style.borderColor = '#8b0000';
+                }, 500);
+            }
+        }
+
+        // --- FUNCIONES FASE TRISTE ---
+        let sadInterval = null;
+        function goSad() {
+            fromSad = true; // Marcar que entró en fase triste
+            const secretContainer = document.getElementById('secret-prompt-container');
+            const sadOverlay = document.getElementById('sad-phase-overlay');
+            const cheerBtn = document.getElementById('cheerBtn');
+
+            cheerBtn.style.opacity = '0';
+            cheerBtn.style.pointerEvents = 'none';
+
+            secretContainer.classList.remove('visible');
+            setTimeout(() => {
+                secretContainer.style.display = 'none';
+                sadOverlay.style.display = 'flex';
+                createRain();
+                // Iniciar lluvia de rosas negras (más lento en móvil)
+                const isMobile = window.innerWidth <= 768;
+                sadInterval = setInterval(spawnBlackRose, isMobile ? 1200 : 500);
+
+                setTimeout(() => sadOverlay.classList.add('visible'), 50);
+
+                const texts = [
+                    "¿No viste el mensaje?...",
+                    "Creí que era obvio...",
+                    "Tanto esfuerzo para nada... :(",
+                    "Mi corazoncito se rompió... 💔"
+                ];
+                let i = 0;
+                const textEl = document.getElementById('sadText');
+                const textInterval = setInterval(() => {
+                    textEl.textContent = texts[i];
+                    i++;
+                    if (i >= texts.length) {
+                        clearInterval(textInterval);
+                        document.getElementById('sadOptions').style.display = 'block';
+
+                        // Retraso de 3 segundos para el botón de consuelo
+                        setTimeout(() => {
+                            cheerBtn.style.opacity = '1';
+                            cheerBtn.style.pointerEvents = 'all';
+                        }, 3000);
+                    }
+                }, 3000);
+            }, 800);
+        }
+
+        function spawnBlackRose() {
+            const overlay = document.getElementById('sad-phase-overlay');
+            if (overlay.style.display === 'none') {
+                clearInterval(sadInterval);
+                return;
+            }
+            const rose = document.createElement('div');
+            rose.className = 'black-rose';
+            rose.textContent = '🥀';
+            rose.style.left = Math.random() * 100 + 'vw';
+            const duration = 4 + Math.random() * 4;
+            rose.style.animationDuration = duration + 's';
+            overlay.appendChild(rose);
+            setTimeout(() => rose.remove(), duration * 1000);
+        }
+
+        function createRain() {
+            const container = document.getElementById('rain-container');
+            container.innerHTML = '';
+            const isMobile = window.innerWidth <= 768;
+            const dropCount = isMobile ? 40 : 100;
+            for (let i = 0; i < dropCount; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'drop';
+                drop.style.left = Math.random() * 100 + 'vw';
+                drop.style.animationDuration = (0.5 + Math.random() * 0.5) + 's';
+                drop.style.animationDelay = (Math.random() * 2) + 's';
+                container.appendChild(drop);
+            }
+        }
+
+        function cheerUp() {
+            const textEl = document.getElementById('sadText');
+            textEl.textContent = "Oh... ¿de verdad no quieres que esté triste? :')";
+            textEl.style.color = "#ff8888";
+            document.getElementById('sadOptions').style.display = 'block';
+        }
+
+        function resetToLetter() {
+            const sadOverlay = document.getElementById('sad-phase-overlay');
+            sadOverlay.classList.remove('visible');
+            setTimeout(() => {
+                sadOverlay.style.display = 'none';
+                document.body.classList.remove('phase-2');
+                // Reiniciar carta
+                currentPage = 0;
+                isOpen = true; // Forzar que esté abierta
+                const env = document.getElementById('envelope');
+                env.style.display = 'block';
+                env.style.opacity = '1';
+                env.style.transform = 'translate(-50%, -50%) scale(1)';
+                document.getElementById('flap').classList.add('open');
+                document.getElementById('paper').classList.add('visible');
+                document.getElementById('seal').style.opacity = '0';
+                renderLetterPage(0, false);
+                document.getElementById('letterContent').classList.add('show');
+            }, 1000);
+        }
+
+        function askForHints() {
+            const sadOverlay = document.getElementById('sad-phase-overlay');
+            sadOverlay.classList.remove('visible');
+            setTimeout(() => {
+                sadOverlay.style.display = 'none';
+                const promptContainer = document.getElementById('secret-prompt-container');
+                promptContainer.style.display = 'flex';
+                setTimeout(() => {
+                    promptContainer.classList.add('visible');
+                    failCount = 2; // Darle ventaja con pistas
+                    checkSecretMessage(); // Forzar primera pista
+                }, 50);
+            }, 1000);
+        }
+
+        function showSlotMachine() {
+            cleanupPhase2(); // Asegurar limpieza total del fondo
+            const slotContainer = document.getElementById('slot-machine-container');
+            slotContainer.style.display = 'flex';
+            initSlots();
+            setTimeout(() => slotContainer.classList.add('visible'), 50);
+        }
+
+        const slotSymbols = ['🖤', '🔥', '🍷', '🕯️', '🦇'];
+        const targetSymbols = ['I', '❤️', 'U'];
+
+        function initSlots() {
+            for (let i = 1; i <= 3; i++) {
+                const content = document.getElementById(`content${i}`);
+                content.innerHTML = '';
+                // Añadir muchos símbolos aleatorios
+                for (let j = 0; j < 30; j++) {
+                    const sym = document.createElement('div');
+                    sym.className = 'symbol';
+                    sym.textContent = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+                    content.appendChild(sym);
+                }
+                // El último es el objetivo
+                const last = document.createElement('div');
+                last.className = 'symbol';
+                const symb = targetSymbols[i - 1];
+                last.textContent = symb;
+
+                // Color carmesí para I y U
+                if (symb === 'I' || symb === 'U') {
+                    last.classList.add('symbol-crimson');
+                }
+
+                content.appendChild(last);
+            }
+        }
+
+        let isSpinning = false;
+        function spinSlots() {
+            if (isSpinning) return;
+            isSpinning = true;
+
+            const lever = document.getElementById('leverBase');
+            lever.classList.add('pulled');
+
+            // Iniciar animación de giro
+            for (let i = 1; i <= 3; i++) {
+                const content = document.getElementById(`content${i}`);
+                const symHeight = 120; // Unificado a 120px (CSS y JS)
+                const travel = (31 - 1) * symHeight; // Ir exactamente al último símbolo
+                content.style.transition = `top ${2.5 + i * 0.5}s cubic-bezier(0.45, 0.05, 0.55, 0.95)`;
+                content.style.top = `-${travel}px`;
+            }
+
+            setTimeout(() => lever.classList.remove('pulled'), 500);
+
+            // Al terminar el último slot
+            setTimeout(() => {
+                const slotContainer = document.getElementById('slot-machine-container');
+                slotContainer.classList.remove('visible');
+                setTimeout(() => {
+                    slotContainer.style.display = 'none';
+                    // Pequeño delay extra para asegurar que el DOM respire
+                    setTimeout(startFinalSurprise, 100);
+                }, 1500);
+            }, 5000); // Un poco más de tiempo para apreciar el resultado
+        }
+
+        function startFinalSurprise() {
+            document.body.classList.add('phase-3');
+            // Fuegos artificiales de alegría
+            fireConfetti();
+            setTimeout(fireConfetti, 1500);
+
+        }
+
+        // MAGIC BURST ELIMINADO
+
+        // ========================================
+        // CONFETTI & PARTÍCULAS
+        // ========================================
+        const confettiCanvas = document.getElementById('confettiCanvas');
+        const confettiCtx = confettiCanvas.getContext('2d');
+        confettiCanvas.width = window.innerWidth;
+        confettiCanvas.height = window.innerHeight;
+        let particles = [];
+
+        function fireConfetti() {
+            const colors = ['#ffd700', '#daa520', '#ff4444', '#8b0000', '#fdf5e6'];
+            // Reducido de 120 a 50 para rendimiento
+            for (let i = 0; i < 50; i++) {
+                particles.push({
+                    x: window.innerWidth / 2,
+                    y: 120,
+                    vx: (Math.random() - 0.5) * 18,
+                    vy: (Math.random() - 0.5) * 18 + 5,
+                    size: Math.random() * 6 + 2,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 1,
+                    decay: 0.008 + Math.random() * 0.015,
+                    rotation: Math.random() * 360,
+                    rotSpeed: (Math.random() - 0.5) * 10
+                });
+            }
+        }
+
+        function createExplosion(x, y) {
+            const colors = ['#8b0000', '#ff0000', '#daa520', '#ffd700', '#ff4444'];
+            for (let i = 0; i < 100; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 12 + 3;
+                particles.push({
+                    x: x, y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    size: Math.random() * 5 + 1,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 1,
+                    decay: 0.01 + Math.random() * 0.02,
+                    rotation: 0, rotSpeed: 0
+                });
+            }
+        }
+
+        function animateConfetti() {
+            confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.15;
+                p.vx *= 0.99;
+                p.life -= p.decay;
+                p.rotation += p.rotSpeed;
+
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                confettiCtx.save();
+                confettiCtx.translate(p.x, p.y);
+                confettiCtx.rotate(p.rotation * Math.PI / 180);
+                confettiCtx.globalAlpha = p.life;
+                confettiCtx.fillStyle = p.color;
+                confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                confettiCtx.restore();
+            }
+            requestAnimationFrame(animateConfetti);
+        }
+        animateConfetti();
+
+        // ========================================
+        // ROSA MATEMÁTICA (FASE 2)
+        // ========================================
+        const rCanvas = document.getElementById('roseCanvas');
+        const rCtx = rCanvas.getContext('2d');
+        let roseAngle = 0;
+
+        function initRose() {
+            rCanvas.width = window.innerWidth;
+            rCanvas.height = window.innerHeight;
+        }
+
+        function drawRose(angle) {
+            // Rastro oscuro con desvanecimiento lento (efecto fantasmal)
+            rCtx.fillStyle = 'rgba(2,0,2,0.06)';
+            rCtx.fillRect(0, 0, rCanvas.width, rCanvas.height);
+
+            const cx = rCanvas.width / 2;
+            const cy = rCanvas.height / 2;
+            const pulse = 1 + Math.sin(angle * 8) * 0.08; // Respira
+            const baseSize = Math.min(cx, cy) * 0.65;
+
+            // === CAPA 1: Aura exterior difusa ===
+            rCtx.save();
+            rCtx.translate(cx, cy);
+            rCtx.rotate(angle * 0.3);
+            rCtx.lineWidth = 0.8;
+            rCtx.globalAlpha = 0.25;
+            rCtx.beginPath();
+            for (let i = 0; i < Math.PI * 20; i += 0.06) {
+                let r = baseSize * 1.15 * Math.sin(7 / 3 * i) * pulse;
+                if (r < 0) r = -r * 0.3;
+                let x = r * Math.cos(i);
+                let y = r * Math.sin(i);
+                rCtx.strokeStyle = `hsla(340, 80%, 12%, 0.6)`;
+                rCtx.lineTo(x, y);
+            }
+            rCtx.stroke();
+            rCtx.restore();
+
+            // === CAPA 2: Rosa gótica principal (7 pétalos) ===
+            rCtx.save();
+            rCtx.translate(cx, cy);
+            rCtx.rotate(angle);
+            rCtx.lineWidth = 2;
+            rCtx.globalAlpha = 0.9;
+            rCtx.shadowColor = 'rgba(180, 0, 0, 0.5)';
+            rCtx.shadowBlur = 15;
+            const step = 0.03;
+            for (let i = 0; i < Math.PI * 20; i += step) {
+                let r = baseSize * Math.sin(7 * i) * pulse;
+                if (r < 0) r = 0;
+                let x = r * Math.cos(i);
+                let y = r * Math.sin(i);
+
+                // Gradiente rojo-granate oscuro con destellos
+                let hue = 345 + Math.sin(i * 3 + angle * 5) * 12;
+                let light = 12 + Math.sin(i * 7 + angle * 10) * 8 + (r / baseSize) * 15;
+                let sat = 65 + Math.sin(i * 2) * 25;
+                rCtx.strokeStyle = `hsl(${hue}, ${sat}%, ${light}%)`;
+                rCtx.beginPath();
+                rCtx.moveTo(x, y);
+                let r2 = baseSize * Math.sin(7 * (i + step)) * pulse;
+                if (r2 < 0) r2 = 0;
+                rCtx.lineTo(r2 * Math.cos(i + step), r2 * Math.sin(i + step));
+                rCtx.stroke();
+            }
+            rCtx.shadowBlur = 0;
+            rCtx.restore();
+
+            // === CAPA 3: Espinas/venas interiores (efecto gótico) ===
+            rCtx.save();
+            rCtx.translate(cx, cy);
+            rCtx.rotate(-angle * 0.5);
+            rCtx.lineWidth = 0.6;
+            rCtx.globalAlpha = 0.4;
+            for (let i = 0; i < Math.PI * 10; i += 0.08) {
+                let r = baseSize * 0.6 * Math.sin(13 * i) * pulse;
+                let x = r * Math.cos(i);
+                let y = r * Math.sin(i);
+                rCtx.strokeStyle = `hsla(350, 90%, 8%, 0.7)`;
+                rCtx.beginPath();
+                rCtx.moveTo(0, 0);
+                rCtx.lineTo(x, y);
+                rCtx.stroke();
+            }
+            rCtx.restore();
+
+            // === CENTRO: Brillo pulsante carmesí ===
+            rCtx.save();
+            rCtx.translate(cx, cy);
+            const glowSize = 40 * pulse;
+            const grad = rCtx.createRadialGradient(0, 0, 0, 0, 0, glowSize);
+            grad.addColorStop(0, `rgba(180, 0, 0, ${0.5 * pulse})`);
+            grad.addColorStop(0.4, 'rgba(100, 0, 0, 0.2)');
+            grad.addColorStop(1, 'rgba(50, 0, 0, 0)');
+            rCtx.fillStyle = grad;
+            rCtx.beginPath();
+            rCtx.arc(0, 0, glowSize, 0, Math.PI * 2);
+            rCtx.fill();
+            rCtx.restore();
+
+            // === PARTÍCULAS DE CHISPA alrededor ===
+            rCtx.save();
+            rCtx.translate(cx, cy);
+            for (let i = 0; i < 6; i++) {
+                let sparkAngle = angle * 3 + i * Math.PI / 3;
+                let dist = baseSize * 0.7 + Math.sin(angle * 5 + i) * 30;
+                let sx = dist * Math.cos(sparkAngle);
+                let sy = dist * Math.sin(sparkAngle);
+                let sparkSize = 2 + Math.sin(angle * 8 + i * 2) * 1.5;
+                rCtx.globalAlpha = 0.4 + Math.sin(angle * 6 + i) * 0.3;
+                rCtx.fillStyle = '#daa520';
+                rCtx.beginPath();
+                rCtx.arc(sx, sy, sparkSize, 0, Math.PI * 2);
+                rCtx.fill();
+            }
+            rCtx.restore();
+        }
+
+        let roseFrameCount = 0;
+        function animateRose() {
+            if (!document.body.classList.contains('phase-2')) return;
+            roseFrameCount++;
+            if (roseFrameCount % 3 === 0) {
+                roseAngle += 0.003 * 3; // Ajustar velocidad angular para compensar los saltos
+                drawRose(roseAngle);
+            }
+            requestAnimationFrame(animateRose);
+        }
+
+        // ========================================
+        // FOTOS CAYENDO (CICLO CONTINUO)
+        // ========================================
+        let photoDropInterval = null;
+        let petalDropInterval = null;
+
+        function startDroppingPhotos() {
+            const container = document.getElementById('photoContainer');
+            let index = 0;
+
+            function dropOne() {
+                const src = yourPhotos[index % yourPhotos.length];
+                index++;
+
+                const imgDiv = document.createElement('div');
+                imgDiv.className = 'falling-photo';
+                imgDiv.style.left = (Math.random() * 70 + 15) + '%';
+
+                const duration = Math.random() * 3000 + 5000;
+                const rot = (Math.random() - 0.5) * 50;
+
+                imgDiv.innerHTML = `<img src="${src}" alt="Recuerdo">`;
+                container.appendChild(imgDiv);
+
+                const anim = imgDiv.animate([
+                    { transform: 'translateY(0) rotate(0deg)', opacity: 0 },
+                    { transform: `translateY(80px) rotate(${rot / 3}deg)`, opacity: 1, offset: 0.08 },
+                    { transform: `translateY(${window.innerHeight + 250}px) rotate(${rot}deg)`, opacity: 0.8 }
+                ], {
+                    duration: duration,
+                    easing: 'ease-in',
+                    fill: 'forwards'
+                });
+
+                anim.onfinish = () => imgDiv.remove();
+            }
+
+            dropOne();
+            photoDropInterval = setInterval(dropOne, 1800);
+        }
+
+        // ========================================
+        // PÉTALOS DE ROSA CAYENDO
+        // ========================================
+        function startDroppingPetals() {
+            const container = document.getElementById('petalContainer');
+            const petals = ['🌹', '🥀', '🌹', '🥀', '🌹'];
+
+            function dropPetal() {
+                if (!document.body.classList.contains('phase-2')) return;
+
+                const petal = document.createElement('div');
+                petal.className = 'falling-petal';
+                petal.textContent = petals[Math.floor(Math.random() * petals.length)];
+                petal.style.left = (Math.random() * 100) + '%';
+                petal.style.fontSize = (Math.random() * 1.2 + 1) + 'rem';
+
+                container.appendChild(petal);
+
+                const duration = Math.random() * 4000 + 5000;
+                const swayX = (Math.random() - 0.5) * 200;
+                const rot = (Math.random() - 0.5) * 360;
+
+                const anim = petal.animate([
+                    { transform: 'translateY(0) translateX(0) rotate(0deg)', opacity: 0 },
+                    { transform: `translateY(60px) translateX(${swayX / 3}px) rotate(${rot / 4}deg)`, opacity: 0.8, offset: 0.1 },
+                    { transform: `translateY(${window.innerHeight / 2}px) translateX(${swayX}px) rotate(${rot / 2}deg)`, opacity: 0.6, offset: 0.6 },
+                    { transform: `translateY(${window.innerHeight + 50}px) translateX(${swayX * 1.2}px) rotate(${rot}deg)`, opacity: 0 }
+                ], {
+                    duration: duration,
+                    easing: 'ease-in-out',
+                    fill: 'forwards'
+                });
+
+                anim.onfinish = () => petal.remove();
+            }
+
+            petalDropInterval = setInterval(dropPetal, 600);
+        }
+
+        function cleanupPhase2() {
+            document.body.classList.remove('phase-2');
+            document.body.classList.add('phase-slots'); // Activar fondo gótico
+            if (photoDropInterval) clearInterval(photoDropInterval);
+            if (petalDropInterval) clearInterval(petalDropInterval);
+
+            // Ocultar contenedores para mayor limpieza
+            const containers = ['photoContainer', 'petalContainer', 'roseCanvas'];
+            containers.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+        }
+
+        // ========================================
+        // LLUVIA DE STICKERS (ELIMINADA)
+        // ========================================
+        /* 
+        function startDroppingStickers() { ... } 
+        */
+
+        // LÓGICA DE CORAZÓN 3D ELIMINADA POR RENDIMIENTO
+
+        // ========================================
+        // 🎵 MELODÍA ROMÁNTICA (CAJA DE MÚSICA)
+        // ========================================
+        let audioCtx = null;
+        function startMelody() {
+            if (audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Progresión más dulce y romántica
+            const melody = [
+                { f: 261.63, d: 0.8 },  // C4 (inicio suave)
+                { f: 293.66, d: 0.6 },  // D4
+                { f: 329.63, d: 1.2 },  // E4 (sostener)
+                { f: 392.00, d: 1.6 },  // G4 (muy larga)
+
+                { f: 440.00, d: 1.0 },  // A4
+                { f: 493.88, d: 0.8 },  // B4
+                { f: 523.25, d: 1.8 },  // C5 (clímax emocional)
+
+                { f: 493.88, d: 1.0 },  // B4
+                { f: 440.00, d: 1.2 },  // A4
+                { f: 392.00, d: 1.0 },  // G4
+                { f: 329.63, d: 2.4 },  // E4 (final MUY largo)
+
+                { f: 261.63, d: 2.0 }   // C4 (cierre suave)
+            ];
+
+            let time = audioCtx.currentTime + 0.1;
+
+            function playNote(freq, start, duration) {
+                // Triple oscilador para sonido más CÁLIDO (estilo piano/voz)
+                const osc1 = audioCtx.createOscillator();
+                const osc2 = audioCtx.createOscillator();
+                const osc3 = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                const filter = audioCtx.createBiquadFilter();
+
+                osc1.type = 'sine';      // Tono base
+                osc2.type = 'triangle';  // Calidez
+                osc3.type = 'sine';      // Armónico suave
+
+                osc1.frequency.setValueAtTime(freq, start);
+                osc2.frequency.setValueAtTime(freq * 2.01, start);  // Octava + desafinación
+                osc3.frequency.setValueAtTime(freq * 0.5, start);   // Bajo suave
+
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(1800, start);
+                filter.frequency.exponentialRampToValueAtTime(400, start + duration);
+                filter.Q.setValueAtTime(3, start); // Más resonancia
+
+                // Envelope más suave (ataque lento, release largo)
+                gain.gain.setValueAtTime(0, start);
+                gain.gain.linearRampToValueAtTime(0.15, start + 0.15);  // Ataque lento
+                gain.gain.setValueAtTime(0.15, start + duration * 0.7);
+                gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+
+                osc1.connect(filter);
+                osc2.connect(filter);
+                osc3.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc1.start(start);
+                osc2.start(start);
+                osc3.start(start);
+                osc1.stop(start + duration);
+                osc2.stop(start + duration);
+                osc3.stop(start + duration);
+            }
+
+            function sequence() {
+                let noteTime = time;
+                melody.forEach(note => {
+                    playNote(note.f, noteTime, note.d * 1.5);
+                    noteTime += note.d * 1.5;
+                });
+                time = noteTime + 1.0;
+                setTimeout(sequence, (noteTime - audioCtx.currentTime) * 1000 + 2000);
+            }
+            sequence();
+        }
+
+        // CURSOR DE AMOR ELIMINADO
+
+        // ========================================
+        // 🌌 BRILLOS DE FONDO (SPARKLES)
+        // ========================================
+        function createSparkle() {
+            const sparkle = document.createElement('div');
+            sparkle.style.position = 'fixed';
+            sparkle.style.left = Math.random() * 100 + 'vw';
+            sparkle.style.top = Math.random() * 100 + 'vh';
+            sparkle.style.width = '2px';
+            sparkle.style.height = '2px';
+            sparkle.style.backgroundColor = '#fff';
+            sparkle.style.borderRadius = '50%';
+            sparkle.style.boxShadow = '0 0 5px #fff, 0 0 10px #ffd700';
+            sparkle.style.pointerEvents = 'none';
+            sparkle.style.zIndex = '1';
+            sparkle.style.opacity = '0';
+            sparkle.style.animation = `twinkle ${Math.random() * 3 + 2}s infinite`;
+            document.body.appendChild(sparkle);
+
+            setTimeout(() => sparkle.remove(), 5000);
+        }
+        setInterval(createSparkle, 800);
+
+        // ========================================
+        // RESIZE HANDLER
+        // ========================================
+        window.addEventListener('resize', () => {
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+            if (document.body.classList.contains('phase-2')) {
+                rCanvas.width = window.innerWidth;
+                rCanvas.height = window.innerHeight;
+            }
+            if (document.body.classList.contains('phase-3')) {
+                // Resize logic for heart emoji not needed
+            }
+        });
+    </script>
+</body>
+
+</html>
